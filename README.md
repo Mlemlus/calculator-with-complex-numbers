@@ -1,6 +1,6 @@
 # scientific-calculator
 
-Jak pravilo zadání 21: \n
+Jak pravilo zadání 21: 
 ,,Úkolem je vytvořit konzolovou aplikaci, která bude fungovat jako klasická kalkulačka která bude ale
 rozšířená o možnost pracovat s komplexního čísly. Kalkulačka bude umožnovat taktéž ukládat si
 jednotlivé mezivýsledky a následně jich používat.
