@@ -2,10 +2,10 @@
 //
 
 #include "scientific-calculator.h"
-#include "Variables.h";
+#include "variables.cpp"
 #include <stdarg.h>
+
 //#include <complex.h>
-#include <string.h>
 
 using namespace std;
 
@@ -26,30 +26,47 @@ int main()
 }
 
 char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algoritmu    https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-	string Output[64];
-	int Operator_stack[64];
 	char Texas_Holdem;
 
 	char *p_u_input = u_input;
 	for (int i = 0; i < strlen(u_input); i++)
 	{
-		ConvertToToken(*p_u_input);
+		// Sjednocení char v jedno číslo
+		if (isdigit(*p_u_input)) {	
+			Texas_Holdem = Texas_Holdem + *p_u_input;
+		}
+		else
+		{
+			if (Texas_Holdem == NULL)
+			{
+				ConvertToToken(*p_u_input);
+			}
+			else {								
+				ConvertToToken(Texas_Holdem);
+				Texas_Holdem = NULL;	// Konec sjednocení char v číslo
+			}
+		}
 		p_u_input++;
 	}
-	char c_output = 'jep';
+	char c_output = 'jep'; // placeholder
 	return c_output;
 }
 
-Token ConvertToToken(char input_c) {	// Z charu udělá Token aka definuje mu typ
-
+void ConvertToToken(char input_c) {	// Z charu udělá Token
 	if (isdigit(input_c)) {
 		printf("Numero %c \n", input_c);
-
+		//token_Output[0].value = input_c;
+		
 	}
-
-
 	else if (isalpha)
 		printf("SUSSY ALPHA");
 	printf("%c \n", input_c);
+
+
+
+
+
+
+	// 1=
 }
 
