@@ -2,16 +2,29 @@
 //
 
 #include "scientific-calculator.h"
-#include "variables.cpp"
+//#include "variables.h"
 #include <stdarg.h>
 
 //#include <complex.h>
 
 using namespace std;
 
+typedef struct t_token
+{
+	int type; // 0 cislo, 1 operator, 2 (, 3 ), 4 other 
+	char value;
+	int precedence;
+	bool associativity; //0 left, 1 right
+}Token;
+
+//funkce ci metody nebo jak se tomu nadava 
 char solver(char u_input[128]);
 Token ConvertToToken(char input_c);
+void AssignStack(Token token);
 
+//stacky
+Token token_Operator_Stack[64];
+Token token_Output[64];
 
 int main()
 {
@@ -26,30 +39,38 @@ int main()
 }
 
 char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algoritmu    https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-	char Texas_Holdem;
+	char digitComplet;
+	Token token = {};
 	char *p_u_input = u_input;
 	for (int i = 0; i < strlen(u_input); i++)
 	{
 		// Sjednocení char v jedno číslo
 		// dodělat poznání komplexu
 		if (isdigit(*p_u_input)) {	
-			Texas_Holdem = Texas_Holdem + *p_u_input;
+			digitComplet = digitComplet + *p_u_input;
+			p_u_input++;
+			continue;
 		}
 		else
 		{
-			if (Texas_Holdem == NULL)
+			if (digitComplet == NULL)
 			{
-				ConvertToToken(*p_u_input);
+				AssignStack(ConvertToToken(*p_u_input));
 			}
 			else {
-				ConvertToToken(Texas_Holdem);
-				Texas_Holdem = NULL;	// Konec sjednocení char v číslo
+				AssignStack(ConvertToToken(digitComplet));
+				digitComplet = NULL;	// Konec sjednocení char v číslo
 			}
 		}
 		p_u_input++;
 	}
-	char c_output = 'jep'; // placeholder
+	char c_output = 'jep'; // placeholder aka vibe check
 	return c_output;
+}
+
+void AssignStack(Token token) { // magie
+
+
 }
 
 Token ConvertToToken(char input_c) {	// Z charu udělá Token
