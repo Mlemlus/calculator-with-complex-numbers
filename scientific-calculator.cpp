@@ -23,8 +23,11 @@ Token ConvertToToken(char input_c);
 void AssignStack(Token token);
 
 //stacky
-Token token_Operator_Stack[64];
-Token token_Output[64];
+Token token_Operator_Stack[64]; //stack
+Token token_Output[64];			//que
+int OSlast = 0;
+int Olast = 0;
+
 
 int main()
 {
@@ -64,13 +67,16 @@ char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algor
 		}
 		p_u_input++;
 	}
+
+	while (OSlast != 0) {	// dosazení zbylích operátorů do outputu -> postfix v output
+		token_Output[Olast] = token_Operator_Stack[OSlast - 1];
+		Olast++;
+		OSlast--;
+	}
+
+
 	char c_output = 'jep'; // placeholder aka vibe check
 	return c_output;
-}
-
-void AssignStack(Token token) { // magie
-
-
 }
 
 Token ConvertToToken(char input_c) {	// Z charu udělá Token
@@ -101,3 +107,45 @@ Token ConvertToToken(char input_c) {	// Z charu udělá Token
 	}
 }
 
+void AssignStack(Token token) { // dá token do stacku
+	if (token.type == 0) { // číslo
+		token_Output[Olast] = token;
+		Olast++;
+	}
+
+	if (token.type == 1) { // operátor
+		if (token_Operator_Stack[OSlast - 1].precedence > token.precedence) { // check priority předchozího operátoru
+			token_Output[Olast] = token_Operator_Stack[OSlast - 1];
+			Olast++;
+			token_Operator_Stack[OSlast - 1] = token;
+		}
+		else {
+			token_Operator_Stack[OSlast] = token;
+			OSlast++;
+		}
+	}
+
+	if (token.type == 2) { // (
+		token_Operator_Stack[OSlast] = token;
+		OSlast++;
+	}
+
+	if (token.type == 3) { // )
+		for (int i = OSlast - 1; i <= 0; i--)
+		{
+			if (token_Operator_Stack[i].type != 2) { // přesun operátorů do output dokud nenajde (
+				token_Output[Olast] = token_Operator_Stack[i];
+				Olast++;
+				OSlast--;
+			}
+			else {
+				OSlast--;
+				break;
+			}
+		}
+	}
+}
+
+void PostFixEvaluator() { // oh yeah, it's all coming together
+
+}
