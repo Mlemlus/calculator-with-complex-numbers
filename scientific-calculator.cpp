@@ -4,15 +4,20 @@
 #include "scientific-calculator.h"
 //#include "variables.h"
 #include <stdarg.h>
-
 //#include <complex.h>
 
+
 using namespace std;
+typedef struct complex {
+	double real;
+	double imaginary;
+};
 
 typedef struct t_token
 {
 	int type; // 0 cislo, 1 operator, 2 (, 3 ), 4 other 
-	char value;
+	char content;
+	struct complex value;
 	int precedence;
 	bool associativity; //0 left, 1 right
 }Token;
@@ -22,21 +27,25 @@ char solver(char u_input[128]);
 Token ConvertToToken(char input_c);
 void AssignStack(Token token);
 void StacksPrint();
+void PostFixEvaluator();
+
 
 
 //stacky
 Token token_Operator_Stack[64]; //stack
 Token token_Output[64];			//que
-double postFixStack[64];				//stack
-int OSlast = 0;
-int Olast = 0;
-int PFSlast = 0;
+complex postFixStack[64];				//stack
+int OSlast = 0;		//posledni free
+int Olast = 0;		//posledni free
+int PFSlast = - 1;	//POSLEDNÍ S HODNOTOU
 
 
 int main()
 {
 	char u_input[128];
-	printf("lmfao zadej priklad pro vypocet xd\n");
+	for (int i = 0; i < 128; i++)
+	{u_input[i] = '\0';}
+	printf("Priklad zapisu:\n12-(5*5-2^(1+1))/(2^2)\n");
 	printf("max 126 znaku\n");
 	scanf("%126s", &u_input);
 	//printf("%s\n", u_input);
@@ -47,34 +56,46 @@ int main()
 }
 
 char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algoritmu    https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-	char digitComplet = NULL;
-	Token token = {};
-	char *p_u_input = u_input;
-	for (int i = 0; i < strlen(u_input); i++)
-	{
+	char numUnify[128];
+	int numCount = 0;
+	char *ptr = u_input;
+	while(*ptr != '\0' || numCount != 0) {
 		// Sjednocení char v jedno číslo
-		// dodělat poznání komplexu
-		if (isdigit(*p_u_input)) {
-			digitComplet = digitComplet + p_u_input[0];
-			p_u_input++;
-			continue;
-		}
-		else
-		{
-			if (digitComplet == NULL)
-			{
-				AssignStack(ConvertToToken(*p_u_input));
-			}
-			else {
-				AssignStack(ConvertToToken(digitComplet));
-				digitComplet = NULL;	// Konec sjednocení char v číslo
+		if (*ptr != '\0') {
+			if (isdigit(*ptr)) {
+				numUnify[numCount] = *ptr;
+				ptr++; numCount++;
+				continue;
 			}
 		}
-		p_u_input++;
+		if (numCount == 0) {
+			AssignStack(ConvertToToken(*ptr));
+		}
+		else {
+			numUnify[numCount] = '\0';
+			Token tukTuk{ 0,'n',complex{0,0},0,NULL };
+			if (*ptr == 'i') {
+				tukTuk.value.imaginary = atof(numUnify);
+				AssignStack(tukTuk);
+				printf("NUMR %c \n", tukTuk.content); //vibe check
+
+			}else{
+				tukTuk.value.real = atof(numUnify);
+				AssignStack(tukTuk);				// assign num do outputu
+				printf("NUMR %c \n", tukTuk.content); //vibe check
+				if (*ptr != '\0') {
+					AssignStack(ConvertToToken(*ptr));  // assign aktualniho (neco jiného než num)
+				}
+			}
+			numCount = 0;
+		}
+		ptr++;
 	}
+
 
 	while (OSlast != 0) {	// dosazení zbylích operátorů do outputu -> postfix v output
 		token_Output[Olast] = token_Operator_Stack[OSlast - 1];
+		token_Operator_Stack[OSlast - 1].content = '\0';
 		Olast++;
 		OSlast--;
 	}
@@ -83,31 +104,26 @@ char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algor
 
 	PostFixEvaluator();
 
-	return (char)(postFixStack[0]);
+	return 0;
 }
 
 Token ConvertToToken(char input_c) {	// Z charu udělá Token
-	if (isdigit(input_c)) {
-		printf("Numero %c \n", input_c); // vibe check
-		Token t = {0,input_c,0,NULL};
-		return t;
-	}
-	else if (isalpha) {
+	if (isalpha) {
 		printf("CHAD %c \n", input_c); //vibe check
 		if (input_c == '^')
-			return Token{ 1,input_c,4,1 };
+			return Token{ 1,input_c,complex{},4,1};
 		if (input_c == '*')
-			return Token{ 1,input_c,3,0 };
-		if (input_c == '/')
-			return Token{ 1,input_c,3,0 };
+			return Token{ 1,input_c,complex{},3,0};
+		if (input_c == '/' || input_c == ':')
+			return Token{ 1,input_c,complex{},3,0};
 		if (input_c == '+')
-			return Token{ 1,input_c,2,0 };
+			return Token{ 1,input_c,complex{},2,0};
 		if (input_c == '-')
-			return Token{ 1,input_c,2,0 };
+			return Token{ 1,input_c,complex{},2,0};
 		if (input_c == '(')
-			return Token{ 2,input_c,1,1 };
+			return Token{ 2,input_c,complex{},0,1};
 		if (input_c == ')')
-			return Token{ 3,input_c,1,0 };
+			return Token{ 3,input_c,complex{},0,0};
 	}
 	else {
 		printf("Něco nefachá: %c \n", input_c); //vibe check
@@ -122,14 +138,17 @@ void AssignStack(Token token) { // dá token do stacku
 	}
 
 	if (token.type == 1) { // operátor
-		if (token_Operator_Stack[OSlast - 1].precedence > token.precedence) { // check priority předchozího operátoru
+		// check precedence předchozího operátoru ve OperatorStacku
+		while (token_Operator_Stack[OSlast - 1].precedence >= token.precedence && token.associativity != 1) {
 			token_Output[Olast] = token_Operator_Stack[OSlast - 1];
-			Olast++;
-			token_Operator_Stack[OSlast - 1] = token;
+			Olast++; OSlast--;
 		}
-		else {
+		if (token_Operator_Stack[OSlast - 1].precedence < token.precedence || token.associativity == 1) {
 			token_Operator_Stack[OSlast] = token;
 			OSlast++;
+		}
+		else {
+			printf("Precedance err %c", token.content);
 		}
 	}
 
@@ -139,14 +158,16 @@ void AssignStack(Token token) { // dá token do stacku
 	}
 
 	if (token.type == 3) { // )
-		for (int i = OSlast - 1; i <= 0; i--)
+		for (int y = OSlast - 1; y >= 0; y--)
 		{
-			if (token_Operator_Stack[i].type != 2) { // přesun operátorů do output dokud nenajde (
-				token_Output[Olast] = token_Operator_Stack[i];
+			if (token_Operator_Stack[y].type != 2) { // přesun operátorů do output dokud nenajde (
+				token_Output[Olast] = token_Operator_Stack[y];
+				token_Operator_Stack[y] = Token{};
 				Olast++;
 				OSlast--;
 			}
 			else {
+				token_Operator_Stack[y]= Token{};
 				OSlast--;
 				break;
 			}
@@ -155,35 +176,66 @@ void AssignStack(Token token) { // dá token do stacku
 }
 
 void StacksPrint() {
+	
 	printf("Operator Stack: ");
-	for (int i = 0; i <= sizeof(token_Operator_Stack); i++)
+	for (int i = 0; i < 64; i++)
 	{
-		printf("%c", token_Operator_Stack[i]);
+		if (token_Operator_Stack[i].content != '\0') {
+			if (token_Operator_Stack[i].type == 0)
+			{
+				printf("(%lf + %lf i)", token_Operator_Stack[i].value.real, token_Operator_Stack[i].value.imaginary);
+			}else
+				printf("%c", token_Operator_Stack[i].content);
+		}
 	}
 	printf("\nToken Output:");	
-	for (int i = 0; i <= sizeof(token_Output); i++)
+	for (int i = 0; i < 64; i++)
 	{
-		printf("%c", token_Output[i]);
+		if (token_Operator_Stack[i].content != '\0') {
+			if (token_Output[i].type == 0)
+			{
+				printf("(%lf + %lf i)", token_Output[i].value.real, token_Output[i].value.imaginary);
+			}
+			else
+				printf("%c", token_Output[i].content);
+		}
 	}
 	printf("\n");
 }
 
 void PostFixEvaluator() { // oh yeah, it's all coming together
-	for (int i = 0; i <= sizeof(token_Output); i++) {
-		if (token_Output[i].type == 0) {
-			postFixStack[PFSlast] = (double)(token_Output[i].value);
-			PFSlast++;
-		}
-		if (token_Output[i].type == 1) {
-			if (token_Output[i].value = '+')
-				postFixStack[PFSlast - 1] = postFixStack[OSlast - 1] + postFixStack[OSlast];
-			if (token_Output[i].value = '-')
-				postFixStack[PFSlast - 1] = postFixStack[OSlast - 1] - postFixStack[OSlast];
-			if (token_Output[i].value = '*')
-				postFixStack[PFSlast - 1] = postFixStack[OSlast - 1] * postFixStack[OSlast];
-			if (token_Output[i].value = '/')
-				postFixStack[PFSlast - 1] = postFixStack[OSlast - 1] / postFixStack[OSlast];	
-			PFSlast--;
+	for (int i = 0; i < 64; i++) {
+		if(token_Output[i].content != '\0')
+		{
+			if (token_Output[i].type == 0) {
+				postFixStack[PFSlast + 1] = (token_Output[i].value);
+				PFSlast++;
+			}
+			if (token_Output[i].type == 1) {
+				if (token_Output[i].content == '+') {
+					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real + postFixStack[PFSlast].real;
+					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary + postFixStack[PFSlast].imaginary;
+				}
+				if (token_Output[i].content == '-') {
+					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real - postFixStack[PFSlast].real;
+					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary - postFixStack[PFSlast].imaginary;
+				}
+				if (token_Output[i].content == '*') {
+					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real * postFixStack[PFSlast].real;
+					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary * postFixStack[PFSlast].imaginary;
+				}
+				if (token_Output[i].content == '/') {
+					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real / postFixStack[PFSlast].real;
+					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary / postFixStack[PFSlast].imaginary;
+				}
+				if (token_Output[i].content == '^') { //fix x^0=1, i^2=-i
+					postFixStack[PFSlast - 1].real = pow(postFixStack[PFSlast - 1].real, postFixStack[PFSlast].real);
+					postFixStack[PFSlast - 1].imaginary = pow(postFixStack[PFSlast - 1].imaginary,postFixStack[PFSlast].imaginary);
+				}
+				PFSlast--;
+			}
 		}
 	}
+	printf("(%4lf + %4lf i)", postFixStack[0].real, postFixStack[0].imaginary);
+
 }
