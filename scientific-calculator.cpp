@@ -42,10 +42,11 @@ int PFSlast = - 1;	//POSLEDNÍ S HODNOTOU
 
 int main()
 {
+	// desetinny cisla add////////////////////////
 	char u_input[128];
 	for (int i = 0; i < 128; i++)
 	{u_input[i] = '\0';}
-	printf("Priklad zapisu:\n12-(5*5-2^(1+1))/(2^2)\n");
+	printf("Priklad zapisu:\n(12-(5+5i)-2^(1+1))/(0-2i^(2))\n"); // Dle casio classwiz = 1.5 - 2.5i
 	printf("max 126 znaku\n");
 	scanf("%126s", &u_input);
 	//printf("%s\n", u_input);
@@ -176,7 +177,7 @@ void AssignStack(Token token) { // dá token do stacku
 }
 
 void StacksPrint() {
-	
+	/*
 	printf("Operator Stack: ");
 	for (int i = 0; i < 64; i++)
 	{
@@ -201,6 +202,7 @@ void StacksPrint() {
 		}
 	}
 	printf("\n");
+	*/
 }
 
 void PostFixEvaluator() { // oh yeah, it's all coming together
@@ -225,17 +227,45 @@ void PostFixEvaluator() { // oh yeah, it's all coming together
 					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary * postFixStack[PFSlast].imaginary;
 				}
 				if (token_Output[i].content == '/') {
-					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real / postFixStack[PFSlast].real;
-					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary / postFixStack[PFSlast].imaginary;
+					if (postFixStack[PFSlast].real != 0) {
+						postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real / postFixStack[PFSlast].real;
+						postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary / postFixStack[PFSlast].real;
+					}
 				}
-				if (token_Output[i].content == '^') { //fix x^0=1, i^2=-i
-					postFixStack[PFSlast - 1].real = pow(postFixStack[PFSlast - 1].real, postFixStack[PFSlast].real);
-					postFixStack[PFSlast - 1].imaginary = pow(postFixStack[PFSlast - 1].imaginary,postFixStack[PFSlast].imaginary);
+				if (token_Output[i].content == '^') { //THE SAUCE
+					if(postFixStack[PFSlast - 1].real != 0 && postFixStack[PFSlast].real != 0) // nelze 0^0 (v komplex)
+						postFixStack[PFSlast - 1].real = pow(postFixStack[PFSlast - 1].real, postFixStack[PFSlast].real);
+
+					int num2 = (int)(postFixStack[PFSlast].real);
+					double podlaha = floor(10000 * postFixStack[PFSlast].real) / 10000;	//zbavení desetinných čísel
+					if (podlaha / num2 == 1 || num2 == 0) //mocnit lze pouze celými čísly
+					{
+						while (num2 >= 4) {	// nepotřebujeme mocninu vetší než 3
+							num2 -= 4;
+						}
+						switch (num2) {	// operace dle mocniny
+							case 0: 
+								postFixStack[PFSlast - 1].real += postFixStack[PFSlast - 1].imaginary;
+								postFixStack[PFSlast - 1].imaginary = 0;
+								break;	
+							case 1:
+								postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary;
+								break;
+							case 2: 
+								postFixStack[PFSlast - 1].real -= postFixStack[PFSlast - 1].imaginary;
+								postFixStack[PFSlast - 1].imaginary = 0;
+								break;
+							case 3:
+								postFixStack[PFSlast - 1].imaginary = -postFixStack[PFSlast - 1].imaginary;
+								break;
+						}
+					}else{
+						printf("Imaginarni cisla lze mocnit pouze celymi cisly: %4lf ^ %4lf", postFixStack[PFSlast - 1].imaginary, num2);
+					}
 				}
 				PFSlast--;
 			}
 		}
 	}
 	printf("(%4lf + %4lf i)", postFixStack[0].real, postFixStack[0].imaginary);
-
 }
