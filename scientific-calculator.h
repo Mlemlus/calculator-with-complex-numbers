@@ -5,6 +5,9 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <string.h>
 #include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 
 // TODO: Zde odkažte na dodatečné hlavičky, které program vyžaduje.
