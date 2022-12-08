@@ -65,6 +65,7 @@ int main()
 		PrintResult(postFixStack[0].real, postFixStack[0].imaginary, result);
 		if (result[0] != '0') {		// uložení nenulového výsledku
 			char buffer=NULL;
+			printf("%s", result);
 			printf("\nUlozit? y/n \n");
 			scanf(" %c", &buffer);
 			if (buffer == 'y')
@@ -87,13 +88,23 @@ void ClearStacks() { // vyčištění proměnných
 void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé char z inputu	
 	char numUnify[1024];
 	int numCount = 0;
-	AssignStack(ConvertToToken('0')); // pro funčkní mínus na začátku příkladu
 	char *ptr = u_input;
 	if (*ptr == '?') { // pro commandy
 		ptr++;
 		Commands(*ptr);
 		ClearStacks();
 		return;
+	}
+	if (*ptr != '\0' && *ptr == '-') {
+		numUnify[0] = '-';
+		ptr++;
+		if (*ptr == 'i') {
+			AssignStack(Token{ 0,'i',complex{0,-1},0,NULL});
+			ptr++;
+		}
+		else {
+			numCount++;
+		}
 	}
 	while(*ptr != '\0' || numCount != 0) {		// Sjednocení char v jedno číslo
 		if (*ptr != '\0') {
@@ -165,10 +176,11 @@ Token ConvertToToken(char input_c) { // z předané hodnoty udělá token
 			return Token{ 0,'i',complex{0,1},0,NULL };
 	}
 	else{ // nemělo by nastat, vytvoří se token na zahození
-		printf("Něco nefachá: %c \n", input_c);
+		printf("Neco nefacha: %c \n", input_c);
 		return Token{ 4, input_c,0,0 };
 	}
-	printf("Neznámý vstup: %c \n", input_c); // catch pro neznámé char
+	if(input_c != '\0')
+		printf("Neznamy vstup: %c \n", input_c); // catch pro neznámé char
 	return Token{ 4, input_c,0,0 };
 
 }
@@ -237,7 +249,7 @@ void PostFixEvaluator() { // výpočet RPN
 					postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real * postFixStack[PFSlast].real;
 					postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary * postFixStack[PFSlast].imaginary;
 				}
-				if (token_Output[i].content == '/') {
+				if (token_Output[i].content == '/' || token_Output[i].content == ':') {
 					if (postFixStack[PFSlast].real != 0) {
 						postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real / postFixStack[PFSlast].real;
 						postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary / postFixStack[PFSlast].real;
@@ -278,7 +290,6 @@ void PostFixEvaluator() { // výpočet RPN
 			}
 		}
 	}
-	printf("(%4lf + %4lf i)", postFixStack[0].real, postFixStack[0].imaginary);
 }
 
 void PrintResult(double r, double i,char *result) { // tisk hodnoty výsledku RPN
@@ -412,7 +423,7 @@ Token ResultPicker(int id) { // vrátí token dle LoadResult ID
 			if (ibuff != 0) {
 				token.value.real = atof(buffer);
 			}
-			token.type == 0; // aby SYA nepřeskočil token
+			token.type = 0; // aby SYA nepřeskočil token
 			return token;
 		}
 		aktResult = aktResult->next;
