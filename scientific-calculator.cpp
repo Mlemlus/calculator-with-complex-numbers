@@ -65,7 +65,6 @@ int main()
 		PrintResult(postFixStack[0].real, postFixStack[0].imaginary, result);
 		if (result[0] != '0') {		// uložení nenulového výsledku
 			char buffer=NULL;
-			printf("%s", result);
 			printf("\nUlozit? y/n \n");
 			scanf(" %c", &buffer);
 			if (buffer == 'y')
