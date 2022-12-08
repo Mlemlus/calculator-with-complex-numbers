@@ -87,6 +87,7 @@ void ClearStacks() { // vyčištění proměnných
 void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé char z inputu	
 	char numUnify[1024];
 	int numCount = 0;
+	AssignStack(ConvertToToken('0')); // pro funčkní mínus na začátku příkladu
 	char *ptr = u_input;
 	if (*ptr == '?') { // pro commandy
 		ptr++;
@@ -163,10 +164,13 @@ Token ConvertToToken(char input_c) { // z předané hodnoty udělá token
 		if (input_c == 'i')
 			return Token{ 0,'i',complex{0,1},0,NULL };
 	}
-	else { // nemělo by nastat, vytvoří se token na zahození
+	else{ // nemělo by nastat, vytvoří se token na zahození
 		printf("Něco nefachá: %c \n", input_c);
 		return Token{ 4, input_c,0,0 };
 	}
+	printf("Neznámý vstup: %c \n", input_c); // catch pro neznámé char
+	return Token{ 4, input_c,0,0 };
+
 }
 
 void AssignStack(Token token) { // předaný token dá do stacku dle SYA
