@@ -1,21 +1,9 @@
-<<<<<<< Updated upstream
-﻿// scientific-calculator.cpp: Definuje vstupní bod pro aplikaci.
-//
-
-#include "scientific-calculator.h"
-//#include "variables.h"
-#include <stdarg.h>
-//#include <complex.h>
-
-
-=======
-﻿/*
+/*
 *Kalkulačka která přepíše vstup pomocí shunting yard algoritmu(SYA) https://en.wikipedia.org/wiki/Shunting_yard_algorithm
 *do Reverse Polish notation
 *Umí i s komplexními čísly, ukládat a načítat hodnoty ze souborů
 */
 #include "scientific-calculator.h"
->>>>>>> Stashed changes
 using namespace std;
 typedef struct complex {
 	double real;
@@ -30,25 +18,7 @@ typedef struct t_token
 	int precedence; //přednost, pro SYA
 	bool associativity; //vázání s tokeny,0 left, 1 right
 }Token;
-<<<<<<< Updated upstream
 
-//funkce ci metody nebo jak se tomu nadava 
-char solver(char u_input[128]);
-Token ConvertToToken(char input_c);
-void AssignStack(Token token);
-void StacksPrint();
-void PostFixEvaluator();
-
-
-
-//stacky
-Token token_Operator_Stack[64]; //stack
-Token token_Output[64];			//que
-complex postFixStack[64];				//stack
-int OSlast = 0;		//posledni free
-int Olast = 0;		//posledni free
-int PFSlast = - 1;	//POSLEDNÍ S HODNOTOU
-=======
 struct t_result { //struct pro načítání hodnot ze souboru
 	int id; //V zápisu výpočtu se píše ve formátu A00, A se ignoruje
 	char result[256];
@@ -80,36 +50,9 @@ int PFSlast;	//POSLEDNÍ S HODNOTOU
 bool repeat = "az naprsi a uschne"; // pro opakování mainu
 char savedPath[] = "saved"; // cesta k souboru s trvalým úložištěm výsledků
 
->>>>>>> Stashed changes
-
 
 int main()
 {
-<<<<<<< Updated upstream
-	// desetinny cisla add////////////////////////
-	char u_input[128];
-	for (int i = 0; i < 128; i++)
-	{u_input[i] = '\0';}
-	printf("Priklad zapisu:\n(12-(5+5i)-2^(1+1))/(0-2i^(2))\n"); // Dle casio classwiz = 1.5 - 2.5i
-	printf("max 126 znaku\n");
-	scanf("%126s", &u_input);
-	//printf("%s\n", u_input);
-	solver(u_input);
-
-	getchar();
-	return 0;
-}
-
-char solver(char u_input[128]) {	// Přepíše vstup pomocí shunting yard algoritmu    https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-	char numUnify[128];
-	int numCount = 0;
-	char *ptr = u_input;
-	while(*ptr != '\0' || numCount != 0) {
-		// Sjednocení char v jedno číslo
-		if (*ptr != '\0') {
-			if (isdigit(*ptr)) {
-				numUnify[numCount] = *ptr;
-=======
 	printf("?h pro manual\n");
 	while (repeat == true)
 	{
@@ -165,7 +108,6 @@ void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé ch
 			}
 			if (isdigit(*ptr) || *ptr == ',' || *ptr == '.') { //přidá číslo či čárku do bufferu, uživatel může napsat jak , tak .
 				*ptr == ',' ? numUnify[numCount] = '.' : numUnify[numCount] = *ptr;
->>>>>>> Stashed changes
 				ptr++; numCount++;
 				continue;
 			}
@@ -173,20 +115,6 @@ void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé ch
 		if (numCount == 0) {
 			AssignStack(ConvertToToken(*ptr));
 		}
-<<<<<<< Updated upstream
-		else {
-			numUnify[numCount] = '\0';
-			Token tukTuk{ 0,'n',complex{0,0},0,NULL };
-			if (*ptr == 'i') {
-				tukTuk.value.imaginary = atof(numUnify);
-				AssignStack(tukTuk);
-				printf("NUMR %c \n", tukTuk.content); //vibe check
-
-			}else{
-				tukTuk.value.real = atof(numUnify);
-				AssignStack(tukTuk);				// assign num do outputu
-				printf("NUMR %c \n", tukTuk.content); //vibe check
-=======
 		else {								 //pro cisla
 			numUnify[numCount] = '\0';
 			Token tukTuk{ 0,'n',complex{0,0},0,NULL };
@@ -197,16 +125,15 @@ void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé ch
 			}else{ //reálné
 				tukTuk.value.real = atof(numUnify);
 				AssignStack(tukTuk);	// assign num do outputu dle SYA
->>>>>>> Stashed changes
 				if (*ptr != '\0') {
 					AssignStack(ConvertToToken(*ptr));  // assign aktualniho (neco jiného než num)
 				}
 			}
 			numCount = 0;
 		}
-		ptr++;
+		if (*ptr != '\0')
+			ptr++;
 	}
-
 
 	while (OSlast != 0) {	// dosazení zbylích operátorů do outputu -> postfix v outputu
 		token_Output[Olast] = token_Operator_Stack[OSlast - 1];
@@ -214,17 +141,12 @@ void solver(char u_input[128]) { // "main" pro výpočet, řeší jednotlivé ch
 		Olast++;
 		OSlast--;
 	}
-
-	StacksPrint(); //vibe check
-
 	PostFixEvaluator();
-
-	return 0;
+	return;
 }
 
 Token ConvertToToken(char input_c) { // z předané hodnoty udělá token
 	if (isalpha) {
-		printf("CHAD %c \n", input_c); //vibe check
 		if (input_c == '^')
 			return Token{ 1,input_c,complex{},4,1};
 		if (input_c == '*')
@@ -239,14 +161,11 @@ Token ConvertToToken(char input_c) { // z předané hodnoty udělá token
 			return Token{ 2,input_c,complex{},0,1};
 		if (input_c == ')')
 			return Token{ 3,input_c,complex{},0,0};
+		if (input_c == 'i')
+			return Token{ 0,'i',complex{0,1},0,NULL };
 	}
-<<<<<<< Updated upstream
-	else {
-		printf("Něco nefachá: %c \n", input_c); //vibe check
-=======
 	else { // nemělo by nastat, vytvoří se token na zahození
 		printf("Něco nefachá: %c \n", input_c);
->>>>>>> Stashed changes
 		return Token{ 4, input_c,0,0 };
 	}
 }
@@ -256,7 +175,6 @@ void AssignStack(Token token) { // předaný token dá do stacku dle SYA
 		token_Output[Olast] = token;
 		Olast++;
 	}
-
 	if (token.type == 1) { // operátor
 		// check precedence předchozího operátoru ve OperatorStacku dle SYA
 		while (token_Operator_Stack[OSlast - 1].precedence >= token.precedence && token.associativity != 1) {
@@ -295,40 +213,7 @@ void AssignStack(Token token) { // předaný token dá do stacku dle SYA
 	}
 }
 
-<<<<<<< Updated upstream
-void StacksPrint() {
-	/*
-	printf("Operator Stack: ");
-	for (int i = 0; i < 64; i++)
-	{
-		if (token_Operator_Stack[i].content != '\0') {
-			if (token_Operator_Stack[i].type == 0)
-			{
-				printf("(%lf + %lf i)", token_Operator_Stack[i].value.real, token_Operator_Stack[i].value.imaginary);
-			}else
-				printf("%c", token_Operator_Stack[i].content);
-		}
-	}
-	printf("\nToken Output:");	
-	for (int i = 0; i < 64; i++)
-	{
-		if (token_Operator_Stack[i].content != '\0') {
-			if (token_Output[i].type == 0)
-			{
-				printf("(%lf + %lf i)", token_Output[i].value.real, token_Output[i].value.imaginary);
-			}
-			else
-				printf("%c", token_Output[i].content);
-		}
-	}
-	printf("\n");
-	*/
-}
-
-void PostFixEvaluator() { // oh yeah, it's all coming together
-=======
 void PostFixEvaluator() { // výpočet RPN
->>>>>>> Stashed changes
 	for (int i = 0; i < 64; i++) {
 		if(token_Output[i].content != '\0')
 		{
@@ -354,13 +239,8 @@ void PostFixEvaluator() { // výpočet RPN
 						postFixStack[PFSlast - 1].real = postFixStack[PFSlast - 1].real / postFixStack[PFSlast].real;
 						postFixStack[PFSlast - 1].imaginary = postFixStack[PFSlast - 1].imaginary / postFixStack[PFSlast].real;
 					}
-<<<<<<< Updated upstream
-				}
-				if (token_Output[i].content == '^') { //THE SAUCE
-=======
 				} else
 				if (token_Output[i].content == '^') { // absolutní magie
->>>>>>> Stashed changes
 					if(postFixStack[PFSlast - 1].real != 0 && postFixStack[PFSlast].real != 0) // nelze 0^0 (v komplex)
 						postFixStack[PFSlast - 1].real = pow(postFixStack[PFSlast - 1].real, postFixStack[PFSlast].real);
 
@@ -388,16 +268,14 @@ void PostFixEvaluator() { // výpočet RPN
 								break;
 						}
 					}else{
-						printf("Imaginarni cisla lze mocnit pouze celymi cisly: %4lf ^ %4lf", postFixStack[PFSlast - 1].imaginary, num2);
+						printf("Imaginarni cisla lze mocnit pouze celymi cisly: %4lf ^ %4lf", postFixStack[PFSlast - 1].imaginary, postFixStack[PFSlast].real);
 					}
 				}
 				PFSlast--;
 			}
 		}
 	}
-<<<<<<< Updated upstream
 	printf("(%4lf + %4lf i)", postFixStack[0].real, postFixStack[0].imaginary);
-=======
 }
 
 void PrintResult(double r, double i,char *result) { // tisk hodnoty výsledku RPN
@@ -604,5 +482,4 @@ void FileSolver(char *inputPath, char *outputPath) {// výpočet ze souboru a n�
 		c = fgetc(f);
 	}
 	fclose(f);
->>>>>>> Stashed changes
 }
